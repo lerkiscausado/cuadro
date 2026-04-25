@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cuadro - Clima</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin: 0;
+        }
+
+        .temp {
+            font-size: 6rem;
+            font-weight: bold;
+        }
+
+        .info {
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+
+        .grid {
+            position: absolute;
+            bottom: 20px;
+            width: 90%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h1 id="ciudad">Cartagena</h1>
+        <div class="temp" id="temp">-- °C</div>
+        <div class="info" id="hora">--:--</div>
+    </div>
+
+    <div class="grid">
+        <div class="card" id="humedad">Humedad: --%</div>
+        <div class="card" id="max">Máx: --°C</div>
+        <div class="card" id="min">Mín: --°C</div>
+    </div>
+
+    <script>
+        function obtenerIndiceActual(times) {
+            const ahora = new Date();
+            const horaActual = ahora.toISOString().slice(0, 13);
+
+            return times.findIndex(t => t.startsWith(horaActual));
+        }
+
+        function actualizarHora() {
+            const ahora = new Date();
+            const hora = ahora.toLocaleTimeString();
+            document.getElementById('hora').innerText = hora;
+        }
+
+        async function cargarClima() {
+            try {
+                const res = await fetch('/api/clima');
+                const data = await res.json();
+
+                const index = obtenerIndiceActual(data.hourly.time);
+
+                const temp = data.hourly.temperature_2m[index];
+                const humedad = data.hourly.relative_humidity_2m[index];
+
+                const temps = data.hourly.temperature_2m;
+
+                const max = Math.max(...temps);
+                const min = Math.min(...temps);
+
+                document.getElementById('temp').innerText = temp + " °C";
+                document.getElementById('humedad').innerText = "Humedad: " + humedad + "%";
+                document.getElementById('max').innerText = "Máx: " + max + " °C";
+                document.getElementById('min').innerText = "Mín: " + min + " °C";
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Inicial
+        cargarClima();
+        actualizarHora();
+
+        // Actualizaciones
+        setInterval(cargarClima, 600000); // cada 10 min
+        setInterval(actualizarHora, 1000); // cada segundo
+    </script>
+
+</body>
+
+</html>
