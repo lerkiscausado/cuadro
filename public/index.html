@@ -6,7 +6,11 @@
     <title>Cuadro - Clima</title>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             background: #000000;
@@ -93,7 +97,7 @@
             border-radius: 16px;
             opacity: 0;
             transition: opacity 0.8s ease;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
         }
 
         .slideshow img.visible {
@@ -102,9 +106,64 @@
 
         .slide-titulo {
             font-size: 0.9rem;
-            color: rgba(255,255,255,0.45);
+            color: rgba(255, 255, 255, 0.45);
             letter-spacing: 2px;
             text-transform: uppercase;
+        }
+
+        /* RSS Panel */
+        .rss-panel {
+            position: absolute;
+            top: 20px;
+            left: 24px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .rss-header {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding-left: 5px;
+        }
+
+        .rss-item {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border-left: 4px solid #ff3b30;
+            padding: 20px;
+            border-radius: 0 16px 16px 0;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .rss-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .rss-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            color: #ffffff;
+        }
+
+        .rss-desc {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
         }
     </style>
 
@@ -112,8 +171,16 @@
 
 <body>
 
+    <!-- Panel RSS Noticias -->
+    <div class="rss-panel">
+        <div class="rss-header">Cartagena Actualidad • Salud</div>
+        <div id="rss-content" class="rss-item">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </div>
+
     <div class="weather-panel">
-        <div class="ciudad">Cartagena</div>
+        <div class="ciudad" id="ciudad-nombre">Cartagena</div>
         <div class="temp" id="temp">--°C</div>
         <div class="hora" id="hora">--:--</div>
         <div class="divider"></div>
@@ -136,7 +203,7 @@
             const ahora = new Date();
             // Formato local YYYY-MM-DDTHH para comparar con el array del API
             const pad = n => String(n).padStart(2, '0');
-            const horaLocal = `${ahora.getFullYear()}-${pad(ahora.getMonth()+1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}`;
+            const horaLocal = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}`;
             let idx = times.findIndex(t => t.startsWith(horaLocal));
             // fallback: buscar por UTC si no hay coincidencia local
             if (idx === -1) {
@@ -152,10 +219,14 @@
             document.getElementById('hora').innerText = ahora.toLocaleTimeString();
         }
 
+        const listaCiudades = ['cartagena', 'barranquilla', 'monteria', 'santa marta', 'bogota', 'medellin'];
+        let indiceCiudad = 0;
+
         // cargar clima
         async function cargarClima() {
             try {
-                const res = await fetch('/api/clima');
+                const ciudadActual = listaCiudades[indiceCiudad];
+                const res = await fetch(`/api/clima?ciudad=${encodeURIComponent(ciudadActual)}`);
                 const data = await res.json();
 
                 const index = obtenerIndiceActual(data.hourly.time);
@@ -165,10 +236,14 @@
 
                 const temps = data.hourly.temperature_2m;
 
+                document.getElementById('ciudad-nombre').innerText = data.nombreCiudad;
                 document.getElementById('temp').innerText = temp + "°C";
                 document.getElementById('humedad').innerText = humedad + "%";
                 document.getElementById('max').innerText = Math.max(...temps) + "°C";
                 document.getElementById('min').innerText = Math.min(...temps) + "°C";
+
+                // Avanzar a la siguiente ciudad para la próxima vez que se llame
+                indiceCiudad = (indiceCiudad + 1) % listaCiudades.length;
 
             } catch (e) {
                 console.error(e);
@@ -180,7 +255,7 @@
         actualizarHora();
 
         // intervalos optimizados
-        setInterval(cargarClima, 600000); // 10 min
+        setInterval(cargarClima, 10000); // Rotar ciudad cada 10 segundos
         setInterval(actualizarHora, 1000); // reloj
 
         // slideshow de fotos
@@ -208,14 +283,50 @@
                 }
 
                 mostrarFoto();
-                setInterval(mostrarFoto, 5000);
+                setInterval(mostrarFoto, 10000);
 
             } catch (e) {
                 console.error('Error cargando fotos:', e);
             }
         }
 
+        // RSS de noticias
+        async function cargarRSS() {
+            try {
+                const res = await fetch('/api/rss');
+                const noticias = await res.json();
+                if (!noticias || noticias.length === 0) return;
+
+                const container = document.getElementById('rss-content');
+                let index = 0;
+
+                function mostrarSiguiente() {
+                    container.classList.remove('visible');
+                    
+                    setTimeout(() => {
+                        const item = noticias[index];
+                        // Limpiar descripción de tags HTML si existen
+                        const desc = (item.contentSnippet || item.content || '').replace(/<[^>]*>?/gm, '');
+                        
+                        container.innerHTML = `
+                            <div class="rss-title">${item.title}</div>
+                            <div class="rss-desc">${desc}</div>
+                        `;
+                        container.classList.add('visible');
+                        index = (index + 1) % noticias.length;
+                    }, 800);
+                }
+
+                mostrarSiguiente();
+                setInterval(mostrarSiguiente, 12000); // Rotar cada 12 segundos
+
+            } catch (e) {
+                console.error('Error cargando RSS:', e);
+            }
+        }
+
         iniciarSlideshow();
+        cargarRSS();
     </script>
 
 </body>
