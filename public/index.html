@@ -27,20 +27,20 @@
         }
 
         .ciudad {
-            font-size: 1.4rem;
+            font-size: 2rem;
             font-weight: bold;
             letter-spacing: 3px;
             text-transform: uppercase;
         }
 
         .temp {
-            font-size: 3.5rem;
+            font-size: 5.5rem;
             font-weight: bold;
             line-height: 1;
         }
 
         .hora {
-            font-size: 1rem;
+            font-size: 1.4rem;
             color: rgba(255, 255, 255, 0.55);
             letter-spacing: 1px;
         }
@@ -60,13 +60,46 @@
         }
 
         .stat-item {
-            font-size: 0.9rem;
+            font-size: 1.3rem;
             color: rgba(255, 255, 255, 0.65);
         }
 
         .stat-item span {
             color: #ffffff;
             font-weight: bold;
+        }
+
+        /* Slideshow */
+        .slideshow {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slideshow img {
+            width: 420px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 14px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+        }
+
+        .slideshow img.visible {
+            opacity: 1;
+        }
+
+        .slide-titulo {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
     </style>
 
@@ -86,12 +119,26 @@
         </div>
     </div>
 
+    <!-- Slideshow fotos -->
+    <div class="slideshow">
+        <img id="slide-img" src="" alt="foto" />
+        <div class="slide-titulo" id="slide-titulo"></div>
+    </div>
+
     <script>
-        // obtener índice de hora actual
+        // obtener índice de hora actual (usando hora local)
         function obtenerIndiceActual(times) {
             const ahora = new Date();
-            const horaActual = ahora.toISOString().slice(0, 13);
-            return times.findIndex(t => t.startsWith(horaActual));
+            // Formato local YYYY-MM-DDTHH para comparar con el array del API
+            const pad = n => String(n).padStart(2, '0');
+            const horaLocal = `${ahora.getFullYear()}-${pad(ahora.getMonth()+1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}`;
+            let idx = times.findIndex(t => t.startsWith(horaLocal));
+            // fallback: buscar por UTC si no hay coincidencia local
+            if (idx === -1) {
+                const horaUTC = ahora.toISOString().slice(0, 13);
+                idx = times.findIndex(t => t.startsWith(horaUTC));
+            }
+            return idx !== -1 ? idx : 0;
         }
 
         // reloj en vivo
@@ -130,6 +177,40 @@
         // intervalos optimizados
         setInterval(cargarClima, 600000); // 10 min
         setInterval(actualizarHora, 1000); // reloj
+
+        // slideshow de fotos
+        async function iniciarSlideshow() {
+            try {
+                const res = await fetch('/api/fotos');
+                const data = await res.json();
+                const fotos = data.fotos;
+                if (!fotos || fotos.length === 0) return;
+
+                const img = document.getElementById('slide-img');
+                const titulo = document.getElementById('slide-titulo');
+                let indice = 0;
+
+                function mostrarFoto() {
+                    img.classList.remove('visible');
+                    setTimeout(() => {
+                        const foto = fotos[indice];
+                        img.src = foto.url;
+                        titulo.innerText = foto.titulo || '';
+                        img.onload = () => img.classList.add('visible');
+                        img.onerror = () => console.error('Error cargando foto:', foto.url);
+                        indice = (indice + 1) % fotos.length;
+                    }, 800);
+                }
+
+                mostrarFoto();
+                setInterval(mostrarFoto, 5000);
+
+            } catch (e) {
+                console.error('Error cargando fotos:', e);
+            }
+        }
+
+        iniciarSlideshow();
     </script>
 
 </body>
