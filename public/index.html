@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Cuadro - Clima</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         * {
@@ -15,62 +17,107 @@
         body {
             background: #000000;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             height: 100vh;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .weather-panel {
             position: absolute;
-            top: 20px;
-            right: 24px;
+            top: 30px;
+            right: 32px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 5px;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            z-index: 20;
+            min-width: 280px;
+            transition: all 0.5s ease;
         }
 
         .ciudad {
-            font-size: 2rem;
-            font-weight: bold;
-            letter-spacing: 3px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            color: #ffffff;
+            margin-bottom: -5px;
+        }
+
+        .temp-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .temp {
-            font-size: 5.5rem;
-            font-weight: bold;
+            font-family: 'Outfit', sans-serif;
+            font-size: 6rem;
+            font-weight: 800;
             line-height: 1;
+            background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .hora {
+        .weather-icon-main {
+            width: 64px;
+            height: 64px;
+            color: #ffcc00;
+            filter: drop-shadow(0 0 10px rgba(255,204,0,0.4));
+        }
+
+        .hora-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 1.4rem;
-            color: rgba(255, 255, 255, 0.55);
-            letter-spacing: 1px;
+            font-weight: 400;
         }
 
         .divider {
             width: 100%;
             height: 1px;
-            background: rgba(255, 255, 255, 0.15);
-            margin: 3px 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            margin: 10px 0;
         }
 
         .stats {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 3px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
         }
 
         .stat-item {
-            font-size: 1.3rem;
-            color: rgba(255, 255, 255, 0.65);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stat-item i {
+            width: 18px;
+            height: 18px;
+            color: rgba(255,255,255,0.4);
         }
 
         .stat-item span {
             color: #ffffff;
-            font-weight: bold;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
         }
 
         /* Slideshow */
@@ -114,33 +161,61 @@
         /* RSS Panel */
         .rss-panel {
             position: absolute;
-            top: 20px;
-            left: 24px;
-            width: 400px;
+            top: 30px;
+            left: 32px;
+            width: 420px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            z-index: 10;
+            gap: 12px;
+            z-index: 20;
         }
 
         .rss-header {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding-left: 5px;
         }
 
+        .rss-header i {
+            color: rgba(255, 255, 255, 0.4);
+            width: 18px;
+        }
+
+        .rss-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .rss-badge {
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .bg-salud { background: #ff3b30; }
+        .bg-actualidad { background: #007aff; }
+        .bg-deportes { background: #34c759; }
+
         .rss-item {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(12px);
-            border-left: 4px solid #ff3b30;
-            padding: 20px;
-            border-radius: 0 16px 16px 0;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            border-radius: 24px;
             opacity: 0;
-            transform: translateX(-30px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transform: translateX(-40px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
         }
 
         .rss-item.visible {
@@ -148,22 +223,47 @@
             transform: translateX(0);
         }
 
-        .rss-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 8px;
-            line-height: 1.4;
-            color: #ffffff;
+        .rss-date {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .rss-desc {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
+        .rss-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            color: #ffffff;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            line-height: 1.5;
+        }
+
+        .rss-desc {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .rss-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #ff3b30;
+            width: 0%;
+            transition: width 12s linear;
         }
     </style>
 
@@ -173,21 +273,44 @@
 
     <!-- Panel RSS Noticias -->
     <div class="rss-panel">
-        <div class="rss-header">Cartagena Actualidad • Salud</div>
+        <div class="rss-header">
+            <i data-lucide="newspaper"></i>
+            <span class="rss-label">Noticias</span>
+            <div id="rss-badge-container"></div>
+        </div>
         <div id="rss-content" class="rss-item">
             <!-- Se llena dinámicamente -->
         </div>
     </div>
 
-    <div class="weather-panel">
-        <div class="ciudad" id="ciudad-nombre">Cartagena</div>
-        <div class="temp" id="temp">--°C</div>
-        <div class="hora" id="hora">--:--</div>
+    <div class="weather-panel" id="weather-panel">
+        <div class="ciudad" id="ciudad-nombre">Cargando...</div>
+        <div class="temp-container">
+            <div id="weather-icon" class="weather-icon-main"></div>
+            <div class="temp" id="temp">--°C</div>
+        </div>
+        <div class="hora-container">
+            <i data-lucide="clock" style="width: 20px;"></i>
+            <div id="hora">--:--:--</div>
+        </div>
         <div class="divider"></div>
         <div class="stats">
-            <div class="stat-item">Humedad: <span id="humedad">--%</span></div>
-            <div class="stat-item">Máx: <span id="max">--°C</span></div>
-            <div class="stat-item">Mín: <span id="min">--°C</span></div>
+            <div class="stat-item">
+                <i data-lucide="droplets"></i>
+                <span id="humedad">--%</span>
+            </div>
+            <div class="stat-item" style="justify-content: flex-end;">
+                <i data-lucide="thermometer-sun" style="color: #ff9500;"></i>
+                <span id="max">--°C</span>
+            </div>
+            <div class="stat-item">
+                <i data-lucide="wind"></i>
+                <span id="viento">--km/h</span>
+            </div>
+            <div class="stat-item" style="justify-content: flex-end;">
+                <i data-lucide="thermometer-snowflake" style="color: #007aff;"></i>
+                <span id="min">--°C</span>
+            </div>
         </div>
     </div>
 
@@ -222,6 +345,19 @@
         const listaCiudades = ['cartagena', 'barranquilla', 'monteria', 'santa marta', 'bogota', 'medellin'];
         let indiceCiudad = 0;
 
+        // Mapeo de códigos de clima a iconos de Lucide
+        function obtenerIconoClima(codigo) {
+            // Códigos WMO: https://open-meteo.com/en/docs
+            if (codigo === 0) return 'sun'; // Despejado
+            if (codigo >= 1 && codigo <= 3) return 'cloud-sun'; // Parcialmente nublado
+            if (codigo >= 45 && codigo <= 48) return 'cloud-fog'; // Niebla
+            if (codigo >= 51 && codigo <= 67) return 'cloud-rain'; // Llovizna/Lluvia
+            if (codigo >= 71 && codigo <= 77) return 'snowflake'; // Nieve
+            if (codigo >= 80 && codigo <= 82) return 'cloud-rain-wind'; // Chubascos
+            if (codigo >= 95) return 'cloud-lightning'; // Tormenta
+            return 'cloud';
+        }
+
         // cargar clima
         async function cargarClima() {
             try {
@@ -233,16 +369,38 @@
 
                 const temp = data.hourly.temperature_2m[index];
                 const humedad = data.hourly.relative_humidity_2m[index];
+                const weathercode = data.hourly.weathercode ? data.hourly.weathercode[index] : 0;
+                const viento = data.hourly.windspeed_10m ? data.hourly.windspeed_10m[index] : '--';
 
                 const temps = data.hourly.temperature_2m;
 
-                document.getElementById('ciudad-nombre').innerText = data.nombreCiudad;
-                document.getElementById('temp').innerText = temp + "°C";
-                document.getElementById('humedad').innerText = humedad + "%";
-                document.getElementById('max').innerText = Math.max(...temps) + "°C";
-                document.getElementById('min').innerText = Math.min(...temps) + "°C";
+                // Animación de entrada
+                const panel = document.getElementById('weather-panel');
+                panel.style.opacity = '0.5';
+                panel.style.transform = 'translateY(-10px)';
 
-                // Avanzar a la siguiente ciudad para la próxima vez que se llame
+                setTimeout(() => {
+                    document.getElementById('ciudad-nombre').innerText = data.nombreCiudad;
+                    document.getElementById('temp').innerText = Math.round(temp) + "°C";
+                    document.getElementById('humedad').innerText = humedad + "%";
+                    document.getElementById('max').innerText = Math.round(Math.max(...temps)) + "°C";
+                    document.getElementById('min').innerText = Math.round(Math.min(...temps)) + "°C";
+                    if (document.getElementById('viento')) {
+                        document.getElementById('viento').innerText = viento + "km/h";
+                    }
+
+                    // Actualizar icono
+                    const iconName = obtenerIconoClima(weathercode);
+                    const iconContainer = document.getElementById('weather-icon');
+                    iconContainer.innerHTML = `<i data-lucide="${iconName}" style="width: 100%; height: 100%;"></i>`;
+                    
+                    lucide.createIcons(); // Re-inicializar iconos
+
+                    panel.style.opacity = '1';
+                    panel.style.transform = 'translateY(0)';
+                }, 300);
+
+                // Avanzar a la siguiente ciudad
                 indiceCiudad = (indiceCiudad + 1) % listaCiudades.length;
 
             } catch (e) {
@@ -306,13 +464,33 @@
                     setTimeout(() => {
                         const item = noticias[index];
                         // Limpiar descripción de tags HTML si existen
-                        const desc = (item.contentSnippet || item.content || '').replace(/<[^>]*>?/gm, '');
+                        const desc = (item.contentSnippet || item.content || '').replace(/<[^>]*>?/gm, '').trim();
                         
+                        // Formatear fecha sutilmente
+                        const fecha = item.isoDate ? new Date(item.isoDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+                        
+                        // Badge dinámico
+                        const catClass = `bg-${(item.categoria || 'actualidad').toLowerCase()}`;
+                        document.getElementById('rss-badge-container').innerHTML = `
+                            <span class="rss-badge ${catClass}">${item.categoria}</span>
+                        `;
+
                         container.innerHTML = `
+                            <div class="rss-date"><i data-lucide="calendar" style="width: 12px;"></i> ${fecha}</div>
                             <div class="rss-title">${item.title}</div>
                             <div class="rss-desc">${desc}</div>
+                            <div class="rss-progress" id="rss-bar"></div>
                         `;
+                        
+                        lucide.createIcons();
                         container.classList.add('visible');
+                        
+                        // Iniciar barra de progreso
+                        const bar = document.getElementById('rss-bar');
+                        setTimeout(() => {
+                            if (bar) bar.style.width = '100%';
+                        }, 50);
+
                         index = (index + 1) % noticias.length;
                     }, 800);
                 }

@@ -39,7 +39,7 @@ app.get('/api/clima', async (req, res) => {
         }
 
         const response = await axios.get(
-            `https://api.open-meteo.com/v1/forecast?latitude=${ciudad.lat}&longitude=${ciudad.lon}&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto`
+            `https://api.open-meteo.com/v1/forecast?latitude=${ciudad.lat}&longitude=${ciudad.lon}&hourly=temperature_2m,relative_humidity_2m,weathercode,windspeed_10m&forecast_days=1&timezone=auto`
         );
 
         cacheClima[ciudadKey] = {
@@ -76,13 +76,35 @@ app.get('/api/fotos', (req, res) => {
     res.json({ fotos });
 });
 
-// API RSS - Noticias
+// API RSS - Noticias Combinadas
 app.get('/api/rss', async (req, res) => {
+    const FEEDS = [
+        { url: 'https://www.cartagenaactualidad.com/rss/salud/', cat: 'Salud' },
+        { url: 'https://www.cartagenaactualidad.com/rss/actualidad/', cat: 'Actualidad' },
+        { url: 'https://www.cartagenaactualidad.com/rss/deportes/', cat: 'Deportes' }
+    ];
+
     try {
-        const feed = await parser.parseURL('https://www.cartagenaactualidad.com/rss/salud/');
-        res.json(feed.items);
+        const promesas = FEEDS.map(async (f) => {
+            try {
+                const feed = await parser.parseURL(f.url);
+                return feed.items.map(item => ({ ...item, categoria: f.cat }));
+            } catch (e) {
+                console.error(`Error en feed ${f.cat}:`, e.message);
+                return [];
+            }
+        });
+
+        const resultados = await Promise.all(promesas);
+        let todasLasNoticias = [].concat(...resultados);
+
+        // Ordenar por fecha (más recientes primero)
+        todasLasNoticias.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate));
+
+        res.json(todasLasNoticias.slice(0, 30)); // Devolver las 30 más recientes
+
     } catch (error) {
-        console.error('Error RSS:', error.message);
+        console.error('Error RSS general:', error.message);
         res.status(500).json({ error: 'Error obteniendo noticias' });
     }
 });
